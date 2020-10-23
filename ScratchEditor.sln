@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScratchEditor", "ScratchEditor\ScratchEditor.csproj", "{CDBCF90A-2AB3-4681-A3E7-EE1E8F3C8D46}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CDBCF90A-2AB3-4681-A3E7-EE1E8F3C8D46}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDBCF90A-2AB3-4681-A3E7-EE1E8F3C8D46}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDBCF90A-2AB3-4681-A3E7-EE1E8F3C8D46}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDBCF90A-2AB3-4681-A3E7-EE1E8F3C8D46}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

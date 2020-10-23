@@ -1,0 +1,44 @@
+﻿<Window x:Class="ScratchEditor.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:ScratchEditor="clr-namespace:ScratchEditor.UI"
+        mc:Ignorable="d"
+        WindowState="Maximized"
+        Title="Scratch Editor | v0.1a" Height="350" Width="525">
+    <!-- WindowStyle="None" -->
+        <!-- AllowsTransparency="True" -->
+        
+<Window.CommandBindings>
+    <CommandBinding Command="New" CanExecute="CommandBinding_OnCanExecute" />
+</Window.CommandBindings>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+            <ToolBarTray AllowDrop="False" >
+                <ToolBar ToolBarTray.IsLocked="True"  Loaded="FrameworkElement_OnLoaded">
+                    <Image Width="25" Height="20" Stretch="Uniform" Source="/Resources/Images/logo.png" />
+                    
+                    <Separator></Separator>
+                    <Button Command="New" Content="New"></Button>
+                    <Button Command="New" Content="Open"></Button>
+                    <Button Command="New" Content="Save"></Button>
+                    <Separator></Separator>
+                </ToolBar>
+            </ToolBarTray>
+        
+        <TabControl Grid.Row="1">
+            <TabItem Header="Home"  Loaded="TabItem_OnLoaded">
+                    <Image Source="Resources/Images/suche.png"></Image>
+            </TabItem>
+            <TabItem Header="Script"  Loaded="TabItem_OnLoaded">
+                    <ScratchEditor:GraphControl Margin="0,0,0,0"></ScratchEditor:GraphControl>
+            </TabItem>
+        </TabControl>
+        
+    </Grid>
+</Window>
