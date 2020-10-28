@@ -1,8 +1,7 @@
-﻿using System.Windows;
-
-namespace ScratchEditor.Screens
+﻿
+namespace ScratchEditor
 {
-    public partial class NodeEditor : Window
+    public partial class NodeEditor
     {
         public NodeEditor()
         {

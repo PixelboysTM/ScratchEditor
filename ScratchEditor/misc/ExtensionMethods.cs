@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using ScratchEditor.Annotations;
 using ScratchEditor.misc.math;
+using ScratchEditor.ThemeHandling;
 
 namespace ScratchEditor.misc
 {
@@ -57,6 +59,41 @@ namespace ScratchEditor.misc
             }
 
             return value;
+        }
+
+        public static List<T> MoveToFront<T>( this List<T> list, T element) where T : class
+        {
+            List<T> news = new List<T>();
+            
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] != element)
+                {
+                    news.Add(list[i]);
+                }
+            }
+            news.Add(element);
+            return news;
+        }
+
+        public static Brush toBrush( this Color color)
+        {
+            return new SolidColorBrush(color);
+        }
+
+        public static Color get(this ColorIdentifier identifier)
+        {
+            return PropertyManager.getColor(identifier);
+        }
+
+        public static int get(this IntIdentifier identifier)
+        {
+            return PropertyManager.getInt(identifier);
+        }
+
+        public static double get(this DoubleIdentifier identifier)
+        {
+            return PropertyManager.getDouble(identifier);
         }
     }
 }

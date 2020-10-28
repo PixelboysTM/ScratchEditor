@@ -90,24 +90,25 @@ namespace ScratchEditor.UITools
         public bool Perform( DrawingContext context,GraphControl self, Point mousePos)
         {
             //DrawBG;
-            SolidColorBrush brush = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Background));
+            Brush brush = ColorIdentifier.Background.get().toBrush();
             context.DrawRoundedRectangle(brush, 
-                new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.InserterOutline)), 1), 
-                new Rect(_pos, _size), 8,8  );
+                new Pen(ColorIdentifier.InserterOutline.get().toBrush(), 
+                    DoubleIdentifier.InserterOutlineThickness.get()), 
+                new Rect(_pos, _size), DoubleIdentifier.InserterCornerRadius.get(), DoubleIdentifier.InserterCornerRadius.get());
             
             //Draw heading
             var f = new FormattedText(
                 "Insert Node",
                 CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight,
-                new Typeface("Verdana"), 12, Brushes.White, VisualTreeHelper.GetDpi(self).PixelsPerDip);
+                new Typeface("Verdana"), 12, ColorIdentifier.TilteText.get().toBrush(), VisualTreeHelper.GetDpi(self).PixelsPerDip);
             context.DrawText(
                 f, 
                 new Point(_pos.X + (_size.Width - f.Width) / 2 , _pos.Y + 2) 
                 );
             context.DrawLine(
                 new Pen(
-                    new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.InserterOutline)), 1),
+                    ColorIdentifier.InserterOutline.get().toBrush(), 1),
                 new Point(_pos.X, _pos.Y + f.Height + 4),
                 new Point(_pos.X + _size.Width, _pos.Y + f.Height + 4));
             
@@ -118,13 +119,11 @@ namespace ScratchEditor.UITools
             
             context.DrawLine(
                     new Pen( 
-                        new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.InserterOutline)
-                        ), 
-                        1), 
+                        ColorIdentifier.InserterOutline.get().toBrush(), 
+                        DoubleIdentifier.InserterSeperatorThickness.get()), 
                     new Point( _pos.X,_pos.Y + f.Height + 12 + f .Height),
                     new Point(_pos.X + _size.Width,_pos.Y + f.Height + 12 + f .Height )
                 );
-            
             //Draw Path
             double curY = _pos.Y + f.Height + 14 + f.Height;
             _rects = new List<Tuple<Rect, bool, string, Type>>();
@@ -138,7 +137,7 @@ namespace ScratchEditor.UITools
 
                 if (new Rect(new Point(_pos.X,curY ), new Size(_size.Width, sFormattedText.Height)).Contains(mousePos) )
                 {
-                    context.DrawRectangle(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Line2)),null,new Rect(new Point(_pos.X,curY ), new Size(_size.Width, sFormattedText.Height)));
+                    context.DrawRectangle(ColorIdentifier.Line2.get().toBrush(),null,new Rect(new Point(_pos.X,curY ), new Size(_size.Width, sFormattedText.Height)));
                 }
                 
                 context.DrawText(
@@ -199,7 +198,7 @@ namespace ScratchEditor.UITools
 
             if (new Rect(_pos.X, y , _size.Width, t.Height).Contains(mouse))
             {
-                context.DrawRectangle(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Line1)),null,new Rect(_pos.X, y , _size.Width, t.Height));
+                context.DrawRectangle(ColorIdentifier.Line1.get().toBrush(),null,new Rect(_pos.X, y , _size.Width, t.Height));
             }
             context.DrawText(t, new Point(_pos.X + 2, y ));
             
@@ -215,13 +214,13 @@ namespace ScratchEditor.UITools
                     }, false ), 
                 });
                _drawnFolders.Add(nt);
-                context.DrawGeometry(null, new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.TilteText)), 1), l  );
+                context.DrawGeometry(null, new Pen(ColorIdentifier.TilteText.get().toBrush(), 1), l  );
             }
             
             _rects.Add(new Tuple<Rect, bool, string, Type>(
                 new Rect(_pos.X, y , _size.Width, t.Height), folder, nt, type));
             y += t.Height + 2;
-            context.DrawLine(new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Line1)),0.5 ),new Point(_pos.X + 3, y -1 ), new Point(_pos.X + _size.Width - 3, y) );
+            context.DrawLine(new Pen(ColorIdentifier.Line1.get().toBrush(),0.5 ),new Point(_pos.X + 3, y -1 ), new Point(_pos.X + _size.Width - 3, y) );
         }
     }
 }

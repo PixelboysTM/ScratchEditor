@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 
 namespace ScratchEditor.misc.math
 {
@@ -40,6 +41,27 @@ namespace ScratchEditor.misc.math
                 }
             }
             return collision;
+        }
+        
+        public static bool PointCircle(double px, double py, double cx, double cy, double r) {
+
+            // get distance between the point and circle's center
+            // using the Pythagorean Theorem
+            double distX = px - cx;
+            double distY = py - cy;
+            double distance = Math.Sqrt( (distX*distX) + (distY*distY) );
+
+            // if the distance is less than the circle's
+            // radius the point is inside!
+            if (distance <= r) {
+                return true;
+            }
+            return false;
+        }
+
+        public static bool PointCircle(Point circleCenter, Point mousePos, double radius)
+        {
+            return PointCircle(mousePos.X, mousePos.Y, circleCenter.X, circleCenter.Y, radius);
         }
     }
 }

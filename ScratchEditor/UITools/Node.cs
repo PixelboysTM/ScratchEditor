@@ -4,19 +4,25 @@ using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using ScratchEditor.misc;
 using ScratchEditor.ThemeHandling;
+using ScratchEditor.UITools;
 
 namespace ScratchEditor.UI
 {
     public class Node
     {
+        
         private double _posX, _posY, _sizeW, _sizeH;
         private string _title;
         private List<Handle> handles;
         private int hoveredHandle;
         private bool dragging = false;
+
+        public ID_Data guid = IdManager.getGuid();
         public Node(double x, double y, double width, double height, string title, params Handle[] handles)
         {
+            
             _posX = x;
             _posY = y;
             _sizeW = width;
@@ -24,6 +30,28 @@ namespace ScratchEditor.UI
             _title = title;
             this.handles = handles.ToList();
         }
+
+        public Handle HoveredHandle
+        {
+            get => handles[hoveredHandle];
+            
+        }
+        
+        public void setId(ID_Data id)
+        {
+            guid = IdManager.setId(guid, id);
+        }
+        
+        public Node(Point pos, ID_Data id)
+        {
+            setId(id);
+            _posX = pos.X;
+            _posY = pos.Y;
+            _sizeW = 200;
+            _sizeH = 250;
+            _title = "Node";
+        }
+        
         public Node(double x, double y, double width, double height, string title, params HandleConstruct[] handles)
         {
             _posX = x;
@@ -60,15 +88,22 @@ namespace ScratchEditor.UI
 
         public Handle applyConnection(Handle conn)
         {
-            handles[hoveredHandle].ConnectTo(conn);
-            return handles[hoveredHandle];
+            if (
+            handles[hoveredHandle].ConnectTo(conn))
+            {
+                return handles[hoveredHandle];
+                
+            }
+
+            return null;
+
         }
         
-        public void EndDrag(Node draggedTo)
+        public bool EndDrag(Node draggedTo)
         {
             dragging = false;
             
-            handles[hoveredHandle].EndDrag(draggedTo.applyConnection(handles[hoveredHandle])); //TODO: Construct to when empty;
+            return handles[hoveredHandle].EndDrag(draggedTo?.applyConnection(handles[hoveredHandle]) ?? null); //TODO: Construct to when empty;
         }
         
         public void BeginDrag()
@@ -94,8 +129,8 @@ namespace ScratchEditor.UI
             
             
             
-            var brush = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Node_BG));
-            var pBrush = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Bounding));
+            var brush = ColorIdentifier.Node_BG.get().toBrush();
+            var pBrush = ColorIdentifier.Bounding.get().toBrush();
             context.DrawRoundedRectangle(brush, new Pen(pBrush, nodeRect.Contains(posM) || selected ? 3 : 1),nodeRect , 10,10  );
 
             var f = new FormattedText(
@@ -160,5 +195,10 @@ namespace ScratchEditor.UI
             _posX -= delta.X;
             _posY -= delta.Y;
         }
+        
+        public Point getPos() => new Point(_posX, _posY);
+        public Point getSize() => new Point(_sizeW, _sizeH);
+
+        public Handle[] getHandles() => handles.ToArray();
     }
 }

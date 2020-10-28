@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Windows;
-using System.Windows.Controls.Primitives;
-using System.Windows.Documents;
 using System.Windows.Media;
 using ScratchEditor.misc;
 using ScratchEditor.misc.math;
@@ -30,9 +27,13 @@ namespace ScratchEditor.UI
         private Handle connectTo = null;
         private bool _dragging = false;
         private Point lastCenter;
+        public readonly ID_Data guid;
+
+        public Handle getConnected() => connectTo;
         
         public Handle(HandleType handleType, HandleDataType handleDataType, Node node)
         {
+            guid = IdManager.getGuid();
             _handleType = handleType;
             _handleDataType = handleDataType;
             parentNode = node;
@@ -43,10 +44,16 @@ namespace ScratchEditor.UI
             _dragging = true;
         }
 
-        public void EndDrag(Handle connTo)
+        public bool EndDrag(Handle connTo)
         {
             _dragging = false;
-            connectTo = connTo;
+            if (connTo != null)
+            {
+                connectTo = connTo;
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -65,7 +72,10 @@ namespace ScratchEditor.UI
             {
                 case HandleDataType.Path:
                     hover = PathDraw(context, mousePos, center);
-                    return center.Y + 10;
+                    return center.Y + 15;
+                case HandleDataType.Bool:
+                    hover = BoolDraw(context, mousePos, center);
+                    return center.Y + 15;
             }
 
             hover = false;
@@ -73,6 +83,31 @@ namespace ScratchEditor.UI
 
         }
 
+        private bool BoolDraw(DrawingContext context, Point mousePos, Point center)
+        {
+            center -= new Vector(1,0);
+            Brush brush = ColorIdentifier.BoolType.get().toBrush();
+            if (connectTo != null)
+            {
+                context.DrawEllipse(brush, null, center, 4,4 );
+                return false;
+            }
+            else if (_dragging || Collisions.PointCircle(center, mousePos, 4) )
+            {
+                context.DrawEllipse(brush, null, center, 4,4 );
+                if (_dragging)
+                {
+                    context.DrawLine(new Pen(brush, 1), center, mousePos );
+                    return false;
+                }
+                return true;
+            }
+            else
+            {
+                context.DrawEllipse(null, new Pen(brush, 1), center, 4,4 );
+                return false;
+            }
+        }
 
         /// <summary>
         /// Draws the Handle for the path Handle Type;
@@ -83,7 +118,7 @@ namespace ScratchEditor.UI
         /// <returns>whether this handle is hovered if dragging from this handle always returns false;</returns>
         private bool PathDraw(DrawingContext context, Point mousePos, Point center)
         {
-            SolidColorBrush brush = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.TilteText));
+            Brush brush = ColorIdentifier.TilteText.get().toBrush();
 
             var points = new Point[]
             {
@@ -139,18 +174,21 @@ namespace ScratchEditor.UI
             if (connectTo == null)
                 return;
 
+            Color c = getColorFromType();
+            
             switch (PropertyManager.LineType)
             {
                 case LineType.Line:
-                    var p = new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.TilteText)), 2);
-                    context.DrawLine(p, lastCenter, lastCenter + new Vector(20,0));
-                    context.DrawLine(p, lastCenter + new Vector(20,0), connectTo.lastCenter - new Vector(20,0));
-                    context.DrawLine(p, connectTo.lastCenter - new Vector(20,0), connectTo.lastCenter);
+                    var p = new Pen(new SolidColorBrush(c), DoubleIdentifier.ConnectionLineThickness.get());
+                    var vector = new Vector(DoubleIdentifier.ConnectionLineStraight.get(), 0);
+                    context.DrawLine(p, lastCenter, lastCenter + vector);
+                    context.DrawLine(p, lastCenter + vector, connectTo.lastCenter - vector);
+                    context.DrawLine(p, connectTo.lastCenter - vector, connectTo.lastCenter);
                     break;
                 case LineType.Bezier:
                     double abs = Math.Abs(lastCenter.X - connectTo.lastCenter.X);
-                    double standartLength = 200.0; /*TODO:EXPOSE TO PROPERTY*/
-                    context.DrawGeometry(null, new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.TilteText)), 1), 
+                    double standartLength = DoubleIdentifier.BezierStandartLenght.get();
+                    context.DrawGeometry(null, new Pen(new SolidColorBrush(c), DoubleIdentifier.ConnectionBezierThickness.get()), 
                         new PathGeometry(new PathFigure[]
                         {
                             new PathFigure(
@@ -170,11 +208,29 @@ namespace ScratchEditor.UI
                     break;
             }
         }
-            
 
-        public void ConnectTo(Handle conn)
+        private Color getColorFromType()
         {
-            connectTo = conn;
+            switch (HandleDataType)
+            {
+                case HandleDataType.Path:
+                    return ColorIdentifier.TilteText.get();
+                case HandleDataType.Bool:
+                    return ColorIdentifier.BoolType.get();
+                default:
+                    return Colors.Purple;
+            }
+        }
+        
+        public bool ConnectTo(Handle conn)
+        {
+            if (conn.HandleDataType == HandleDataType)
+            {
+                connectTo = conn;
+                return true;
+            }
+
+            return false;
         }
     }
 
@@ -196,7 +252,7 @@ namespace ScratchEditor.UI
             HandleDataType = dataType;
         }
         
-        public HandleType HandleType;
-        public HandleDataType HandleDataType;
+        public readonly HandleType HandleType;
+        public readonly HandleDataType HandleDataType;
     }
 }

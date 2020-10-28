@@ -1,14 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using ScratchEditor.misc;
 using ScratchEditor.ThemeHandling;
-using ScratchEditor.UITools;
+using ScratchEditor.UI;
+using Node = ScratchEditor.UI.Node;
 
-namespace ScratchEditor.UI
+namespace ScratchEditor.UITools
 {
     public class GraphControl : Control
     {
@@ -25,6 +27,12 @@ namespace ScratchEditor.UI
         private Node nodeForAction = null;
         private Node draggingTo = null;
         private bool _draggingConnection = false;
+        public ID_Data guid;
+
+        public void setId(ID_Data id)
+        {
+            guid = IdManager.setId(guid, id);
+        }
         
         static GraphControl()
         {
@@ -34,11 +42,19 @@ namespace ScratchEditor.UI
 
         public GraphControl()
         {
+            guid = IdManager.getGuid();
+
+            this.Focusable = true;
+            Keyboard.Focus(this);
+            Keyboard.AddKeyDownHandler(this, OnKeyDown);
+            Keyboard.AddKeyUpHandler(this, OnKeyUp);
+            
          brush = new SolidColorBrush();   
          nodes = new List<Node>()
          {
-             new Node(50,50,150,100, "SampleNode", new HandleConstruct(HandleType.Input, HandleDataType.Path), new HandleConstruct(HandleType.Output, HandleDataType.Path)),
-             new Node(500,50,150,100, "SampleNode", new HandleConstruct(HandleType.Input, HandleDataType.Path), new HandleConstruct(HandleType.Output, HandleDataType.Path)),
+             new Node(50,50,150,100, "SampleNode", new HandleConstruct(HandleType.Input, HandleDataType.Path), new HandleConstruct(HandleType.Input, HandleDataType.Bool), new HandleConstruct(HandleType.Output, HandleDataType.Path), new HandleConstruct(HandleType.Output, HandleDataType.Bool)),
+             new Node(100,50,150,100, "SampleNode", new HandleConstruct(HandleType.Input, HandleDataType.Path), new HandleConstruct(HandleType.Input, HandleDataType.Bool), new HandleConstruct(HandleType.Output, HandleDataType.Path), new HandleConstruct(HandleType.Output, HandleDataType.Bool)),
+             new Node(150,50,150,100, "SampleNode", new HandleConstruct(HandleType.Input, HandleDataType.Path), new HandleConstruct(HandleType.Input, HandleDataType.Bool), new HandleConstruct(HandleType.Output, HandleDataType.Path), new HandleConstruct(HandleType.Output, HandleDataType.Bool)),
          };
          
          mousePos = new Point(0,0);
@@ -61,26 +77,44 @@ namespace ScratchEditor.UI
          _inserter.AddNodeElement<Node>("12");
          _inserter.AddNodeElement<Node>("13");
          _inserter.AddNodeElement<Node>("14");
+
+         // var y = Serialisation.SerialzeGraph(this);
+         // Console.WriteLine(y);
+         
+          Serialisation.DeserializeGraph(
+              "{\"id\":15658816,\"offset\":\"0,0\",\"nodes\":[{\"id\":1484882,\"pos\":\"50,50\",\"size\":\"150,100\",\"handles\":[{\"id\":51717130,\"HandleType\":0,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":76566748,\"HandleType\":0,\"HandleDataType\":3,\"connectedTo\":-1},{\"id\":62435764,\"HandleType\":1,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":50246420,\"HandleType\":1,\"HandleDataType\":3,\"connectedTo\":-1}]},{\"id\":46016738,\"pos\":\"100,50\",\"size\":\"150,100\",\"handles\":[{\"id\":26722482,\"HandleType\":0,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":55123457,\"HandleType\":0,\"HandleDataType\":3,\"connectedTo\":-1},{\"id\":43477822,\"HandleType\":1,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":45107328,\"HandleType\":1,\"HandleDataType\":3,\"connectedTo\":-1}]},{\"id\":84178410,\"pos\":\"150,50\",\"size\":\"150,100\",\"handles\":[{\"id\":10713050,\"HandleType\":0,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":1532512,\"HandleType\":0,\"HandleDataType\":3,\"connectedTo\":-1},{\"id\":34662742,\"HandleType\":1,\"HandleDataType\":0,\"connectedTo\":-1},{\"id\":22373670,\"HandleType\":1,\"HandleDataType\":3,\"connectedTo\":-1}]}]}"
+              , this);
         }
 
 
+        public Point getOffset() => offset;
+        public Node[] getNodes() => nodes.ToArray();
         protected override void OnRender(DrawingContext drawingContext)
         {
             base.OnRender(drawingContext);
             
+            //SortingNodes
+            if (selctedNodes != null && selctedNodes.Count > 0)
+            {
+                foreach (var node in selctedNodes)
+                {
+                    nodes = nodes.MoveToFront(node);
+                }
+            }
+            
             //Drawing BG;
-            brush.Color = PropertyManager.getColor(ColorIdentifier.Background);
+            brush.Color = ColorIdentifier.Background.get();
             drawingContext.DrawRectangle(brush, null, new Rect(0,0,ActualWidth, ActualHeight));
             
             //Draw Grid;
-            SolidColorBrush b = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Line1));
-            Pen pen = new Pen(b, /*TODO:Expose To Property*/0.2);
+            SolidColorBrush b = (SolidColorBrush) ColorIdentifier.Line1.get().toBrush();
+            Pen pen = new Pen(b, DoubleIdentifier.GridThickness.get());
             int gridSize = 20;
             DrawGrid(drawingContext, pen, gridSize, ActualWidth, ActualHeight);
             
             gridSize *= 2;
             pen.Thickness = 0.8;
-            b.Color = PropertyManager.getColor(ColorIdentifier.Line2);
+            b.Color = ColorIdentifier.Line2.get();
             DrawGrid(drawingContext, pen, gridSize, ActualWidth, ActualHeight);
             
             
@@ -105,6 +139,7 @@ namespace ScratchEditor.UI
                     else
                         draggingTo = node;
                 }
+
             }
 
             
@@ -118,16 +153,15 @@ namespace ScratchEditor.UI
             //Draw Selection
             if (controlDown && leftMouseDown && dragFrom != null)
             {
-                SolidColorBrush s = new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Bounding));
+                Brush s = ColorIdentifier.Bounding.get().toBrush();
                 var p = new Pen(s, 3);
                 p.DashStyle = DashStyles.Dash;
                 p.DashCap = PenLineCap.Square;
 
                 drawingContext.DrawRectangle(null, p, new Rect(dragFrom, mousePos ));
             }
-            
             //Drawing Bounding;
-            drawingContext.DrawRectangle(null, new Pen(new SolidColorBrush(PropertyManager.getColor(ColorIdentifier.Bounding)), /* Expose to Property*/ 5), new Rect(0,0, ActualWidth, ActualHeight) );
+            drawingContext.DrawRectangle(null, new Pen(ColorIdentifier.Bounding.get().toBrush(), DoubleIdentifier.WindowBoundingThickness.get()), new Rect(0,0, ActualWidth, ActualHeight) );
         }
         
         
@@ -230,7 +264,7 @@ namespace ScratchEditor.UI
                 return;
             } //Inserter Handling
 
-            if (nodeForAction != null)
+            if (nodeForAction != null && nodeForAction.HoveredHandle.HandleType == HandleType.Output)
             {
                 _draggingConnection = true;
                 nodeForAction.BeginDrag();
@@ -240,19 +274,23 @@ namespace ScratchEditor.UI
             
             leftMouseDown = true;
             selctedNodes = new List<Node>();
+            Node tempNode = null;
             if (controlDown)
             {
                 dragFrom = e.GetPosition(this);
+                
                 return;
             }
             foreach (var node in nodes)
             {
                 if (node.getRect(offset).Contains(e.MouseDevice.GetPosition(this)))
                 {
-                    selctedNodes.Add(node);
-                    break;
+                    tempNode = node;
                 }
             }
+
+            if (tempNode != null)
+                selctedNodes.Add(tempNode);
             
         }
 
@@ -263,8 +301,19 @@ namespace ScratchEditor.UI
 
             if (_draggingConnection)
             {
+                if (nodeForAction == draggingTo )
+                {
+                    nodeForAction.EndDrag(null);
+                    InvalidateVisual();
+                    return;
+                }
                 _draggingConnection = false;
-                nodeForAction.EndDrag(draggingTo);
+                if (!nodeForAction.EndDrag(draggingTo))
+                {
+                    //TODO: OpenInserter with filter;
+                }
+
+                
                 InvalidateVisual();
                 return;
             }
@@ -297,8 +346,9 @@ namespace ScratchEditor.UI
             OpenInserter(e.GetPosition(this));
         }
 
-        protected override void OnKeyDown(KeyEventArgs e)
+        private void OnKeyDown(Object o,KeyEventArgs e)
         {
+            base.OnKeyDown(e);
             if (InserterOpen)
             {
                 _inserter.PerformKeyPress(e.Key);
@@ -306,17 +356,18 @@ namespace ScratchEditor.UI
                 return;
             }
             
-            base.OnKeyDown(e);
-            if (e.Key == Key.LeftCtrl)
+            switch (e.Key)
             {
-                controlDown = true;
-            }else if (e.Key == Key.Space)
-            {
-                OpenInserter(mousePos);
+                case Key.LeftCtrl:
+                    controlDown = true;
+                    break;
+                case Key.Space:
+                    OpenInserter(mousePos);
+                    break;
             }
         }
 
-        protected override void OnKeyUp(KeyEventArgs e)
+        private void OnKeyUp( Object o, KeyEventArgs e)
         {
             base.OnKeyUp(e);
             if (e.Key == Key.LeftCtrl)
@@ -333,6 +384,16 @@ namespace ScratchEditor.UI
                 _inserter.PerformScroll(e.Delta);
                 InvalidateVisual();
             }
+        }
+
+        public void setOffset(Point jsonObjOffset)
+        {
+            offset = jsonObjOffset;
+        }
+
+        public void setNodes(List<Node> list)
+        {
+            nodes = list;
         }
     }
 }

@@ -1,5 +1,1 @@
-﻿TODO: Make sure only connects to equal type; 
-TODO: Make sure cant connect to same node; 
-TODO: Make draggable only from output; 
-TODO: Remove warnings; 
-TODO: Add Inserter searching ability;
+﻿TODO: Add Inserter searching ability;
